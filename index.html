@@ -3,9 +3,11 @@
 <head>
   <title>Leap Motion Letter detector</title>
 
+
+      <script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r67/three.js"></script>
   <script src="//js.leapmotion.com/leap-0.6.3.min.js"></script>
-  <!-- <script src="http://js.leapmotion.com/leap-plugins-0.1.6.1.js"></script>
-  <script src="http://js.leapmotion.com/leap.rigged-hand-0.1.4.min.js"></script> -->
+  <script src="http://js.leapmotion.com/leap-plugins-0.1.6.1.js"></script>
+  <script src="http://js.leapmotion.com/leap.rigged-hand-0.1.4.min.js"></script>
   <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   <script src="mqttws31.js"></script>
 </head>
@@ -23,7 +25,7 @@ var options = { enableGestured: true };
 var alphabet = {
   "A": { fingers: [1, 2, 2, 2, 2] }, //first finger cant be closed
   "B": { fingers: [1, 0, 0, 0, 0] },
-  "C": { fingers: [1, 1, 1, 1, 1] },
+  "Hello": { fingers: [1, 1, 1, 1, 1] },
   "D": { fingers: [2, 0, 1, 1, 1] },
   "E": { fingers: [0, 2, 2, 2, 2] },
   "F": { fingers: [1, 2, 0, 0, 0] },
@@ -120,8 +122,12 @@ Leap.loop(options, function(frame) {
       getFingerPosition(fingers[2], hand) === alphabet[letter].fingers[2] &&
       getFingerPosition(fingers[3], hand) === alphabet[letter].fingers[3] &&
       getFingerPosition(fingers[4], hand) === alphabet[letter].fingers[4]) {
-        console.log("Request sent");
+        console.log("Request sent " + letter);
+
+
         publishMQTT(letter);
+
+
         // setTimeout(function() {
         //   message.innerHTML =  "Message: Ready for next gesture";
         //   commandBeingExecuted = false;
@@ -143,10 +149,10 @@ Leap.loop(options, function(frame) {
 
       var mqttClient;
       var mqttConfig = {
-        deviceId : "leapmotionID", // enter your device id
+        deviceId : "randomLeap", // enter your device id
         deviceType : "leapmotion",
-        apiToken : "qML0?ZxO!wxPjbXgU&", // enter your authentication token
-        orgId : "y69a20", // enter your organization id
+        apiToken : "(HKzx5a@5Sqxt7VI&P", // enter your authentication token
+        orgId : "xh2w3m", // enter your organization id
         port : 1883
       };
 
@@ -175,6 +181,44 @@ Leap.loop(options, function(frame) {
       }
 
       connectMQTT();
+
+
+
+
+      // var mqttClient;
+      // var mqttConfig = {
+      //   deviceId : "randomLeap", // enter your device id
+      //   deviceType : "leapmotion",
+      //   apiToken : "(HKzx5a@5Sqxt7VI&P", // enter your authentication token
+      //   orgId : "xh2w3m", // enter your organization id
+      //   port : 1883
+      // };
+      //
+      // function publishMQTT(commandToBeSent) {
+      //   var mqttMessage;
+      //   if (mqttClient) {
+      //     mqttMessage = new Paho.MQTT.Message(JSON.stringify({
+      //       "event" : commandToBeSent
+      //     }));
+      //     mqttMessage.destinationName = "iot-2/evt/partial/fmt/json";
+      //     mqttClient.send(mqttMessage);
+      //   }
+      // }
+      //
+      // function connectMQTT() {
+      //   var clientId = ['d', mqttConfig.orgId, mqttConfig.deviceType, mqttConfig.deviceId].join(':');
+      //   mqttClient = new Paho.MQTT.Client(mqttConfig.orgId + ".messaging.internetofthings.ibmcloud.com", mqttConfig.port, clientId);
+      //   mqttClient.connect({
+      //     userName: "use-token-auth",
+      //     password: mqttConfig.apiToken,
+      //     onSuccess: function() {
+      //       debugger;
+      //       message.innerHTML =  "Message: Connected to Bluemix. Ready for next gesture";
+      //     }
+      //   });
+      // }
+//
+      // connectMQTT();
 
   </script>
   </html>
