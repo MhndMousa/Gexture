@@ -3,14 +3,16 @@
 <head>
   <title>Leap Motion Letter detector</title>
 
+  <script src="//js.leapmotion.com/leap-0.6.3.min.js"></script>
+  <!-- <script src="http://js.leapmotion.com/leap-plugins-0.1.6.1.js"></script>
+  <script src="http://js.leapmotion.com/leap.rigged-hand-0.1.4.min.js"></script> -->
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <script src="mqttws31.js"></script>
 </head>
 
 <body>
 
 </body>
-
-<script src="//js.leapmotion.com/leap-0.6.3.min.js"></script>
-<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 
 <script>
 //general vars
@@ -23,28 +25,29 @@ var alphabet = {
   "B": { fingers: [1, 0, 0, 0, 0] },
   "C": { fingers: [1, 1, 1, 1, 1] },
   "D": { fingers: [2, 0, 1, 1, 1] },
-  "E": { fingers: [2, 2, 2, 2, 2] },
+  "E": { fingers: [0, 2, 2, 2, 2] },
   "F": { fingers: [1, 2, 0, 0, 0] },
-  "G": { fingers: [2, 1, 2, 2, 2] }, //hand on side
-  "H": { fingers: [2, 1, 1, 2, 2] }, //hand on side
+  // "G": { fingers: [2, 1, 2, 2, 2] }, //hand on side
+  // "H": { fingers: [2, 1, 1, 2, 2] }, //hand on side
   "I": { fingers: [1, 2, 2, 2, 0] },
-  "J": { fingers: [1, 2, 2, 2, 0] }, //movement in J form;  hand in between front and side
-  "K": { fingers: [1, 0, 1, 2, 2] }, //hand in between front and side
+  // "J": { fingers: [1, 2, 2, 2, 0] }, //movement in J form;  hand in between front and side
+  // "K": { fingers: [1, 0, 1, 2, 2] }, //hand in between front and side
   "L": { fingers: [0, 0, 2, 2, 2] },
-  "M": { fingers: [2, 2, 2, 2, 2] },
-  "N": { fingers: [1, 2, 2, 2, 2] },
-  "O": { fingers: [2, 2, 2, 2, 2] },
-  "P": { fingers: [1, 0, 1, 2, 2] }, //hand facing down
-  "Q": { fingers: [1, 1, 2, 2, 2] }, //hand facing down
+  // "M": { fingers: [2, 2, 2, 2, 2] }
+  "M": { fingers: [0, 0, 0, 0, 0] },
+  // "N": { fingers: [1, 2, 2, 2, 2] },
+  "O": { fingers: [1, 0, 1, 1, 0] },
+  // "P": { fingers: [1, 0, 1, 2, 2] }, //hand facing down
+  // "Q": { fingers: [1, 1, 2, 2, 2] }, //hand facing down
   "R": { fingers: [1, 0, 0, 2, 2] },
-  "S": { fingers: [2, 2, 2, 2, 2] },
-  "T": { fingers: [1, 2, 2, 2, 2] },
-  "U": { fingers: [1, 0, 0, 2, 2], fingersPosition: "together" }, //fingers together
-  "V": { fingers: [1, 0, 0, 2, 2], fingersPosition: "separate" }, //fingers separate
+  // "S": { fingers: [2, 2, 2, 2, 2] },
+  // "T": { fingers: [1, 2, 2, 2, 2] },
+  // "U": { fingers: [1, 0, 0, 2, 2], fingersPosition: "together" }, //fingers together
+  // "V": { fingers: [1, 0, 0, 2, 2], fingersPosition: "separate" }, //fingers separate
   "W": { fingers: [1, 0, 0, 0, 1] },
-  "X": { fingers: [2, 1, 2, 2, 2] },
+  // "X": { fingers: [2, 1, 2, 2, 2] },
   "Y": { fingers: [0, 2, 2, 2, 0] },
-  "Z": { fingers: [2, 1, 2, 2, 2] }, //movement in Z form
+  // "Z": { fingers: [2, 1, 2, 2, 2] }, //movement in Z form
 };
 var fingerNames = ["thumb", "index", "middle", "ring", "pinky"];
 
@@ -104,10 +107,12 @@ Leap.loop(options, function(frame) {
 
   //making sure leap motion is connected
   for(var i = 0; i < frame.hands.length; i++) {
-    console.log("checking frames");
+    console.log("Checking frames");
     hand = frame.hands[i];
     fingers = hand.fingers;
     var correctFingers = 0;
+
+    // var lastFrameid = frame.id();
 
     for (var letter in alphabet) {
       if(getFingerPosition(fingers[0], hand) === alphabet[letter].fingers[0] &&
@@ -115,13 +120,61 @@ Leap.loop(options, function(frame) {
       getFingerPosition(fingers[2], hand) === alphabet[letter].fingers[2] &&
       getFingerPosition(fingers[3], hand) === alphabet[letter].fingers[3] &&
       getFingerPosition(fingers[4], hand) === alphabet[letter].fingers[4]) {
-        console.log("We found ==> " + letter);
-        break;
+        console.log("Request sent");
+        publishMQTT(letter);
+        // setTimeout(function() {
+        //   message.innerHTML =  "Message: Ready for next gesture";
+        //   commandBeingExecuted = false;
+        // }, 3000);
       }}
+
 
 
     }
   });
+
+
+
+
+
+
+
+      // Connect leapmotion to Bluemix
+
+      var mqttClient;
+      var mqttConfig = {
+        deviceId : "leapmotionID", // enter your device id
+        deviceType : "leapmotion",
+        apiToken : "qML0?ZxO!wxPjbXgU&", // enter your authentication token
+        orgId : "y69a20", // enter your organization id
+        port : 1883
+      };
+
+      function publishMQTT(commandToBeSent) {
+        var mqttMessage;
+        if (mqttClient) {
+          mqttMessage = new Paho.MQTT.Message(JSON.stringify({
+            "event" : commandToBeSent
+          }));
+          mqttMessage.destinationName = "iot-2/evt/partial/fmt/json";
+          mqttClient.send(mqttMessage);
+        }
+      }
+
+      function connectMQTT() {
+        var clientId = ['d', mqttConfig.orgId, mqttConfig.deviceType, mqttConfig.deviceId].join(':');
+        mqttClient = new Paho.MQTT.Client(mqttConfig.orgId + ".messaging.internetofthings.ibmcloud.com", mqttConfig.port, clientId);
+        mqttClient.connect({
+          userName: "use-token-auth",
+          password: mqttConfig.apiToken,
+          onSuccess: function() {
+            debugger;
+            message.innerHTML =  "Message: Connected to Bluemix. Ready for next gesture";
+          }
+        });
+      }
+
+      connectMQTT();
 
   </script>
   </html>
