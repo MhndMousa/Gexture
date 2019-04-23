@@ -1,6 +1,8 @@
 # GestureToText
 An app that uses leap motion to detect a letter in ASL language
 
+[Link to the Demo](https://devpost.com/software/gexture-uk4pig)
+
 # Collaborators 
 Harry Kran-Annexstein, Dorian Brown, Senal Kularatne
 
